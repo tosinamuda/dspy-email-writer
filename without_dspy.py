@@ -11,11 +11,9 @@ client = OpenAI()
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 
 
-def generate_email(sender: str, recipient: str, topic: str, tone: str) -> dict:
+def generate_email(topic: str, tone: str) -> dict:
     prompt = f"""Write a professional email.
 
-From: {sender}
-To: {recipient}
 Topic: {topic}
 Tone: {tone}
 
@@ -42,11 +40,6 @@ Do not include backticks. Do not add text before or after the JSON."""
 
 
 if __name__ == "__main__":
-    result = generate_email(
-        sender="Tosin",
-        recipient="Hiring Manager",
-        topic="Application follow-up",
-        tone="formal",
-    )
+    result = generate_email(topic="Following up on a job application", tone="formal")
     print(f"Subject: {result['subject']}")
     print(f"Body: {result['body']}")

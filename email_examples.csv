@@ -1,13 +1,13 @@
-sender,recipient,topic,tone
-Tosin,Hiring Manager,Application follow-up,formal
-Tosin,Kemi,Lunch plans,friendly
-Tosin,Professor Adams,Research collaboration,formal
-Tosin,Sarah,Birthday party invite,friendly
-Tosin,IT Support,VPN not connecting,urgent
-Tosin,Team,Sprint retrospective notes,neutral
-Tosin,Client Services,Contract renewal,formal
-Tosin,David,Weekend hiking trip,friendly
-Tosin,Finance,Expense report submission,formal
-Tosin,Alex,Book recommendation,friendly
-Tosin,HR,Remote work request,formal
-Tosin,Marketing,Campaign feedback,neutral
+topic,tone
+Following up on a job application,formal
+Rescheduling Thursday's lunch,friendly
+Proposing a research collaboration,formal
+Inviting the team to a birthday lunch,friendly
+VPN will not connect from home,urgent
+Sprint retrospective notes,neutral
+Contract renewal terms,formal
+Planning a weekend hiking trip,friendly
+Submitting an expense report,formal
+Recommending a book to a colleague,friendly
+Requesting two remote days a week,formal
+Feedback on the campaign draft,neutral

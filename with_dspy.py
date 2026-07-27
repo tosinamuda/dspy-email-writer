@@ -6,11 +6,9 @@ from lm import task_lm
 
 
 class WriteEmail(dspy.Signature):
-    """Write a professional email for the given sender, recipient, topic, and tone."""
+    """Write a professional email about the given topic, in the given tone."""
 
-    sender: str = dspy.InputField()
-    recipient: str = dspy.InputField()
-    topic: str = dspy.InputField()
+    topic: str = dspy.InputField(desc="what the email is about")
     tone: str = dspy.InputField(desc="e.g. formal, friendly, urgent")
 
     subject: str = dspy.OutputField(desc="Email subject line")
@@ -22,11 +20,6 @@ dspy.configure(lm=task_lm())
 email = dspy.ChainOfThought(WriteEmail)
 
 if __name__ == "__main__":
-    result = email(
-        sender="Tosin",
-        recipient="Hiring Manager",
-        topic="Application follow-up",
-        tone="formal",
-    )
+    result = email(topic="Following up on a job application", tone="formal")
     print(f"Subject: {result.subject}")
     print(f"Body: {result.body}")
