@@ -35,12 +35,12 @@ That file is where the models, the search budget, and the metric thresholds live
 ## Run them in order
 
 ```bash
-uv run python examples/01_without_dspy.py     # f-string, JSON parsing, retry loop
-uv run python examples/02_with_dspy.py        # the same task as a Signature
-uv run python examples/03_make_eval_set.py    # invent eval inputs if you have none
-uv run python examples/04_baseline.py         # score before tuning anything
-uv run python examples/05_optimize.py         # compile with GEPA, print before and after
-uv run python examples/06_use_compiled.py     # load the tuned program and call it
+uv run python src/examples/01_without_dspy.py     # f-string, JSON parsing, retry loop
+uv run python src/examples/02_with_dspy.py        # the same task as a Signature
+uv run python src/examples/03_make_eval_set.py    # invent eval inputs if you have none
+uv run python src/examples/04_baseline.py         # score before tuning anything
+uv run python src/examples/05_optimize.py         # compile with GEPA, print before and after
+uv run python src/examples/06_use_compiled.py     # load the tuned program and call it
 ```
 
 `01` and `02` do the same job, so read them side by side. `04` is the one people skip; without it, `05` produces a different prompt rather than a better one.
@@ -50,15 +50,16 @@ On `qwen2.5:7b-instruct`, `04` scores 66.7. Most of what it is catching is the p
 ## Layout
 
 ```
-src/email_writer/      # the package the examples import
-  config.py            # models, budgets, thresholds, paths
-  lm.py                # builds the two dspy.LM objects
-  signature.py         # WriteEmail: the task contract
-  metric.py            # what "a good email" means, in code
-  data.py              # load the eval set, or invent one
-examples/              # numbered, meant to be read in order
-data/                  # the eval set: inputs only, no gold answers
-skills/prompt-to-dspy/ # a Claude agent skill for migrating your own prompts
+src/
+  email_writer/          # the package the examples import
+    config.py            # models, budgets, thresholds, paths
+    lm.py                # builds the two dspy.LM objects
+    signature.py         # WriteEmail: the task contract
+    metric.py            # what "a good email" means, in code
+    data.py              # load the eval set, or invent one
+  examples/              # numbered, meant to be read in order
+  data/                  # the eval set: inputs only, no gold answers
+skills/prompt-to-dspy/   # a Claude agent skill for migrating your own prompts
 ```
 
 The examples are scripts rather than an importable package, because a Python module name cannot start with a digit and the numbering is worth more than the import.

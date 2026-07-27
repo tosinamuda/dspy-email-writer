@@ -26,9 +26,11 @@ OPENAI_MODEL = "gpt-5"
 # API_BASE = "http://localhost:11434"
 # OPENAI_MODEL = "qwen2.5:7b-instruct"
 
-ROOT = Path(__file__).resolve().parents[2]
-EVAL_SET_PATH = ROOT / "data" / "email_examples.csv"
-COMPILED_PATH = ROOT / "optimized_email_writer.json"
+SRC = Path(__file__).resolve().parents[1]
+EVAL_SET_PATH = SRC / "data" / "email_examples.csv"
+
+# A build output, not source, so it lands at the repo root rather than in src/.
+COMPILED_PATH = SRC.parent / "optimized_email_writer.json"
 
 # GEPA's search budget. auto="light" is the one to use for real; set
 # MAX_METRIC_CALLS to an int for a short, cheap run while wiring things up.
