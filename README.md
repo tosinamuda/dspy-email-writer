@@ -1,6 +1,6 @@
 # dspy-email-writer
 
-Companion code for [Can't Get Enough of DSPy](https://www.tosinamuda.com/blog/cant-get-enough-of-dspy).
+Companion code for [Can't Get Enough of DSPy](https://www.tosinamuda.com/blog/cant-get-enough-of-dspy.html).
 
 The same task (generate a professional email) implemented two ways: raw prompt engineering and DSPy. Run both, compare the code, and see what DSPy handles for you.
 
