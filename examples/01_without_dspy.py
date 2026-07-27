@@ -1,14 +1,16 @@
-"""Email generation without DSPy — the f-string approach."""
+"""The starting point: one f-string, and the plumbing it needs to survive.
+
+    uv run python examples/01_without_dspy.py
+"""
 
 import json
-import os
 
 from openai import OpenAI
 
-client = OpenAI()
+from email_writer.config import provider
 
-# Set OPENAI_MODEL / OPENAI_BASE_URL to point this at any OpenAI-compatible host.
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
+p = provider()
+client = OpenAI(base_url=p.openai_base_url, api_key=p.api_key or None)
 
 
 def generate_email(topic: str, tone: str) -> dict:
@@ -24,7 +26,7 @@ Do not include backticks. Do not add text before or after the JSON."""
 
     for attempt in range(3):
         response = client.chat.completions.create(
-            model=MODEL,
+            model=p.openai_model,
             messages=[{"role": "user", "content": prompt}],
         )
         text = response.choices[0].message.content.strip()

@@ -1,8 +1,11 @@
-"""Email generation with DSPy — the Signature approach."""
+"""The task contract.
+
+Every name in here is prompt text. DSPy renders the class docstring as the
+instruction and the field names as the labels the model reads and writes, so
+`topic` and `tone` do work that `input_1` and `input_2` would not.
+"""
 
 import dspy
-
-from lm import task_lm
 
 
 class WriteEmail(dspy.Signature):
@@ -13,13 +16,3 @@ class WriteEmail(dspy.Signature):
 
     subject: str = dspy.OutputField(desc="Email subject line")
     body: str = dspy.OutputField(desc="Full email body")
-
-
-dspy.configure(lm=task_lm())
-
-email = dspy.ChainOfThought(WriteEmail)
-
-if __name__ == "__main__":
-    result = email(topic="Following up on a job application", tone="formal")
-    print(f"Subject: {result.subject}")
-    print(f"Body: {result.body}")

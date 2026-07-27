@@ -2,63 +2,76 @@
 
 Companion code for [Stop Hand-Writing and Brute-Forcing Prompts: Use DSPy Instead](https://www.tosinamuda.com/blog/stop-hand-writing-prompts-dspy.html).
 
-The same task (generate a professional email) implemented two ways: raw prompt engineering and DSPy. Run both, compare the code, and see what DSPy handles for you.
+One task, generating a professional email, written twice: once as an f-string with the plumbing it needs, once as a DSPy Signature. Then scored, optimized, and loaded back.
 
 ## Setup
 
 ```bash
 uv sync
+cp .env.example .env
 ```
 
-## Files
+Then pick a provider.
 
-- `without_dspy.py` — f-string prompt with JSON parsing, retry loop, and manual validation
-- `with_dspy.py` — DSPy Signature and ChainOfThought module
-- `optimize.py` — score a baseline, compile the email writer from the eval set with GEPA, then save the tuned program
-- `lm.py` — which model the scripts talk to (defaults to OpenAI; override with env vars)
-- `email_examples.csv` — sample eval set (12 rows, one per test case)
+**Against OpenAI**, put your key in `.env`:
 
-## Run
+```
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+```
+
+**Against a local model**, no key needed. Install [ollama](https://ollama.com), then:
 
 ```bash
-# Without DSPy
-uv run python without_dspy.py
-
-# With DSPy
-uv run python with_dspy.py
-
-# Optimize from eval set
-uv run python optimize.py
+ollama pull qwen2.5:7b-instruct
 ```
+
+```
+LLM_PROVIDER=ollama
+```
+
+Every script reads the same provider, so this is the only switch. Model names, budgets, and thresholds live in `email_writer/config.py` rather than the environment: they are decisions about the program, and a diff should show them changing.
+
+## Run them in order
+
+```bash
+uv run python examples/01_without_dspy.py     # f-string, JSON parsing, retry loop
+uv run python examples/02_with_dspy.py        # the same task as a Signature
+uv run python examples/03_make_eval_set.py    # invent eval inputs if you have none
+uv run python examples/04_baseline.py         # score before tuning anything
+uv run python examples/05_optimize.py         # compile with GEPA, print before and after
+uv run python examples/06_use_compiled.py     # load the tuned program and call it
+```
+
+`01` and `02` do the same job, so read them side by side. `04` is the one people skip; without it, `05` produces a different prompt rather than a better one.
+
+On `qwen2.5:7b-instruct`, `04` scores 66.7 and `05` takes it to 85.4. Most of that gap is the placeholder check: rather than write around a detail it was never given, a small model leaves `[Your Name]` and `[Company]` for a human to fill in.
+
+## Layout
+
+```
+email_writer/          # the shared pieces the examples import
+  config.py            # providers, models, budgets, paths
+  lm.py                # builds the dspy.LM objects
+  signature.py         # WriteEmail: the task contract
+  metric.py            # what "a good email" means, in code
+  data.py              # load the eval set, or invent one
+examples/              # numbered, meant to be read in order
+data/                  # the eval set: inputs only, no gold answers
+skills/prompt-to-dspy/ # a Claude agent skill for migrating your own prompts
+```
+
+The eval set has no expected outputs. The metric judges what comes back against rules, so nothing here waits on someone labelling a corpus first.
 
 ## Prompt to DSPy skill
 
-`skills/prompt-to-dspy/` is a Claude agent skill that does the `without_dspy.py` → `with_dspy.py` conversion on your own code: it scans for f-string prompts, extracts the contract (inputs, outputs, intent), picks a module, and lists the plumbing you can then delete.
+`skills/prompt-to-dspy/` converts your own code the way `01` becomes `02`: it finds the f-string prompts, measures a baseline first (inventing eval inputs if the project has none), extracts each contract, proposes a Signature and a module, and scores the result against the number it started with.
 
-Install it into the project you want to convert, not globally — it is a migration tool, so it should be present while you migrate and gone afterwards:
+It is a migration tool, so install it into the project you are converting rather than globally:
 
 ```bash
 mkdir -p /path/to/your-project/.claude/skills
 cp -r skills/prompt-to-dspy /path/to/your-project/.claude/skills/
 ```
 
-Then, from that project, ask Claude to convert your prompts to DSPy. It proposes a before/after per call site for you to review; it does not rewrite anything on its own.
-
-## Running against another provider
-
-The scripts default to OpenAI. To use anything else, including a local model, set the model and base URL instead of editing the code:
-
-```bash
-# DSPy scripts, against a local ollama model
-DSPY_MODEL=ollama_chat/qwen2.5:7b-instruct \
-DSPY_API_BASE=http://localhost:11434 \
-DSPY_REFLECTION_MODEL=ollama_chat/qwen2.5:7b-instruct \
-GEPA_MAX_METRIC_CALLS=25 \
-uv run python optimize.py
-
-# the without-DSPy script talks to the OpenAI SDK directly
-OPENAI_BASE_URL=http://localhost:11434/v1 OPENAI_API_KEY=ollama OPENAI_MODEL=qwen2.5:7b-instruct \
-uv run python without_dspy.py
-```
-
-`GEPA_MAX_METRIC_CALLS` caps the optimizer's search for a quick run. Leave it unset to use the `auto="light"` budget.
+Then ask Claude to convert your prompts. It proposes a before and after per call site; it does not rewrite anything on its own.
