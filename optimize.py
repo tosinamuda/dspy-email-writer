@@ -40,14 +40,21 @@ if __name__ == "__main__":
     eval_set = load_eval_set()
     print(f"Loaded {len(eval_set)} examples")
 
+    email = dspy.ChainOfThought(WriteEmail)
+
+    baseline = dspy.Evaluate(devset=eval_set, metric=email_quality, num_threads=4)(email)
+    print(f"Baseline: {baseline.score:.1f}")
+
     optimizer = dspy.GEPA(
         metric=email_quality,
         auto="light",  # search budget: light, medium, or heavy
         reflection_lm=dspy.LM("openai/gpt-5", temperature=1.0, max_tokens=32000),
         num_threads=4,
     )
-    compiled_email = optimizer.compile(
-        dspy.ChainOfThought(WriteEmail), trainset=eval_set
-    )
-    compiled_email.save("optimized_email_writer/", save_program=True)
-    print("Saved compiled program to optimized_email_writer/")
+    compiled_email = optimizer.compile(email, trainset=eval_set)
+
+    tuned = dspy.Evaluate(devset=eval_set, metric=email_quality, num_threads=4)(compiled_email)
+    print(f"Compiled: {tuned.score:.1f} (baseline was {baseline.score:.1f})")
+
+    compiled_email.save("optimized_email_writer.json")
+    print("Saved compiled program to optimized_email_writer.json")

@@ -14,7 +14,7 @@ uv sync
 
 - `without_dspy.py` — f-string prompt with JSON parsing, retry loop, and manual validation
 - `with_dspy.py` — DSPy Signature and ChainOfThought module
-- `optimize.py` — compile the email writer from an eval set using GEPA
+- `optimize.py` — score a baseline, compile the email writer from the eval set with GEPA, then save the tuned program
 - `email_examples.csv` — sample eval set (12 rows, one per test case)
 
 ## Run
