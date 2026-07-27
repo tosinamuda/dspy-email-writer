@@ -7,10 +7,12 @@ import json
 
 from openai import OpenAI
 
-from email_writer.config import provider
+from email_writer.config import OPENAI_MODEL
 
-p = provider()
-client = OpenAI(base_url=p.openai_base_url, api_key=p.api_key or None)
+# The SDK reads OPENAI_API_KEY, and OPENAI_BASE_URL if you point it at a local
+# server. This is the only example that needs either: from 02 on, DSPy hands the
+# routing to LiteLLM.
+client = OpenAI()
 
 
 def generate_email(topic: str, tone: str) -> dict:
@@ -26,7 +28,7 @@ Do not include backticks. Do not add text before or after the JSON."""
 
     for attempt in range(3):
         response = client.chat.completions.create(
-            model=p.openai_model,
+            model=OPENAI_MODEL,
             messages=[{"role": "user", "content": prompt}],
         )
         text = response.choices[0].message.content.strip()

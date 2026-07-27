@@ -4,33 +4,33 @@ Companion code for [Stop Hand-Writing and Brute-Forcing Prompts: Use DSPy Instea
 
 One task, generating a professional email, written twice: once as an f-string with the plumbing it needs, once as a DSPy Signature. Then scored, optimized, and loaded back.
 
-## Setup
+## Prerequisites
 
-```bash
-uv sync
-cp .env.example .env
-```
+[uv](https://docs.astral.sh/uv/), and a model to talk to. Pick one.
 
-Then pick a provider.
-
-**Against OpenAI**, put your key in `.env`:
-
-```
-LLM_PROVIDER=openai
-OPENAI_API_KEY=sk-...
-```
-
-**Against a local model**, no key needed. Install [ollama](https://ollama.com), then:
+**A local model, no API key.** Install [ollama](https://ollama.com/download), then pull the model these examples were written against:
 
 ```bash
 ollama pull qwen2.5:7b-instruct
 ```
 
-```
-LLM_PROVIDER=ollama
+`ollama serve` runs in the background once installed; `ollama list` confirms the model is there. A 7B model is small enough to be wrong in interesting ways, which is the point: it is what makes the optimizer's improvement visible.
+
+**Or OpenAI:**
+
+```bash
+export OPENAI_API_KEY=sk-...
 ```
 
-Every script reads the same provider, so this is the only switch. Model names, budgets, and thresholds live in `email_writer/config.py` rather than the environment: they are decisions about the program, and a diff should show them changing.
+## Setup
+
+```bash
+uv sync
+```
+
+The examples default to OpenAI. To run locally instead, swap the four values at the top of `src/email_writer/config.py` for the commented ollama block underneath them.
+
+That file is where the models, the search budget, and the metric thresholds live. They are decisions about the program rather than facts about your machine, so they sit in version control where a diff shows them changing. The one thing left in the environment is your API key, which LiteLLM reads on its own.
 
 ## Run them in order
 
@@ -45,14 +45,14 @@ uv run python examples/06_use_compiled.py     # load the tuned program and call 
 
 `01` and `02` do the same job, so read them side by side. `04` is the one people skip; without it, `05` produces a different prompt rather than a better one.
 
-On `qwen2.5:7b-instruct`, `04` scores 66.7 and `05` takes it to 85.4. Most of that gap is the placeholder check: rather than write around a detail it was never given, a small model leaves `[Your Name]` and `[Company]` for a human to fill in.
+On `qwen2.5:7b-instruct`, `04` scores 66.7. Most of what it is catching is the placeholder check: rather than write around a detail it was never given, a small model leaves `[Your Name]` and `[Company]` for a human to fill in. `05` takes several minutes against a local model, so start it and go and do something else.
 
 ## Layout
 
 ```
-email_writer/          # the shared pieces the examples import
-  config.py            # providers, models, budgets, paths
-  lm.py                # builds the dspy.LM objects
+src/email_writer/      # the package the examples import
+  config.py            # models, budgets, thresholds, paths
+  lm.py                # builds the two dspy.LM objects
   signature.py         # WriteEmail: the task contract
   metric.py            # what "a good email" means, in code
   data.py              # load the eval set, or invent one
@@ -60,6 +60,8 @@ examples/              # numbered, meant to be read in order
 data/                  # the eval set: inputs only, no gold answers
 skills/prompt-to-dspy/ # a Claude agent skill for migrating your own prompts
 ```
+
+The examples are scripts rather than an importable package, because a Python module name cannot start with a digit and the numbering is worth more than the import.
 
 The eval set has no expected outputs. The metric judges what comes back against rules, so nothing here waits on someone labelling a corpus first.
 
