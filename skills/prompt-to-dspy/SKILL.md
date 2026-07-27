@@ -1,3 +1,8 @@
+---
+name: prompt-to-dspy
+description: Migrate hardcoded LLM prompt templates into DSPy Signatures and Modules. Use when converting existing LLM code to DSPy — "convert my prompts to DSPy", "migrate to DSPy", "extract signatures from my code" — or when pointed at a file with f-string prompts, JSON parsing, and retry loops around a model call.
+---
+
 # Prompt to DSPy
 
 Migrate hardcoded LLM prompt templates into DSPy Signatures and Modules.
