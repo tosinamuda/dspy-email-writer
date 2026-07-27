@@ -1,6 +1,6 @@
 # dspy-email-writer
 
-Companion code for [Stop Hand-Writing and Brute-Forcing Prompts: The DSPy Way](https://www.tosinamuda.com/blog/stop-hand-writing-prompts-dspy.html).
+Companion code for [Stop Hand-Writing and Brute-Forcing Prompts: Use DSPy Instead](https://www.tosinamuda.com/blog/stop-hand-writing-prompts-dspy.html).
 
 The same task (generate a professional email) implemented two ways: raw prompt engineering and DSPy. Run both, compare the code, and see what DSPy handles for you.
 
