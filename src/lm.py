@@ -2,7 +2,7 @@
 
 import dspy
 
-from email_writer.config import (
+from config import (
     API_BASE,
     REFLECTION_MAX_TOKENS,
     REFLECTION_MODEL,

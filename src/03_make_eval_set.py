@@ -12,9 +12,9 @@ row every time you meet a failure in the wild.
 
 import dspy
 
-from email_writer.config import EVAL_SET_PATH
-from email_writer.data import save_eval_set, synthesize_eval_set
-from email_writer.lm import task_lm
+from config import EVAL_SET_PATH
+from eval_set import save_eval_set, synthesize_eval_set
+from lm import task_lm
 
 SETTING = "a software company, written by an engineer to colleagues and outside contacts"
 COUNT = 12

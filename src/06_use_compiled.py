@@ -8,9 +8,9 @@ instruction GEPA wrote, and this prints it so you can see what you are shipping.
 
 import dspy
 
-from email_writer.config import COMPILED_PATH
-from email_writer.lm import task_lm
-from email_writer.signature import WriteEmail
+from config import COMPILED_PATH
+from lm import task_lm
+from signature import WriteEmail
 
 if __name__ == "__main__":
     if not COMPILED_PATH.exists():

@@ -9,16 +9,16 @@ before and after so the run has a verdict.
 
 import dspy
 
-from email_writer.config import (
+from config import (
     COMPILED_PATH,
     GEPA_AUTO,
     MAX_METRIC_CALLS,
     NUM_THREADS,
 )
-from email_writer.data import load_eval_set
-from email_writer.lm import reflection_lm, task_lm
-from email_writer.metric import email_quality
-from email_writer.signature import WriteEmail
+from eval_set import load_eval_set
+from lm import reflection_lm, task_lm
+from metric import email_quality
+from signature import WriteEmail
 
 if __name__ == "__main__":
     dspy.configure(lm=task_lm())

@@ -10,7 +10,7 @@ import csv
 import dspy
 from pydantic import BaseModel, Field
 
-from email_writer.config import EVAL_SET_PATH
+from config import EVAL_SET_PATH
 
 INPUT_FIELDS = ("topic", "tone")
 

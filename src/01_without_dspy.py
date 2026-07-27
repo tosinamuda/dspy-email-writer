@@ -7,7 +7,7 @@ import json
 
 from openai import OpenAI
 
-from email_writer.config import OPENAI_MODEL
+from config import OPENAI_MODEL
 
 # The SDK reads OPENAI_API_KEY, and OPENAI_BASE_URL if you point it at a local
 # server. This is the only example that needs either: from 02 on, DSPy hands the

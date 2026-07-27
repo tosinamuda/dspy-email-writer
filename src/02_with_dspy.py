@@ -8,8 +8,8 @@ result comes back typed.
 
 import dspy
 
-from email_writer.lm import task_lm
-from email_writer.signature import WriteEmail
+from lm import task_lm
+from signature import WriteEmail
 
 dspy.configure(lm=task_lm())
 

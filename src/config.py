@@ -26,7 +26,7 @@ OPENAI_MODEL = "gpt-5"
 # API_BASE = "http://localhost:11434"
 # OPENAI_MODEL = "qwen2.5:7b-instruct"
 
-SRC = Path(__file__).resolve().parents[1]
+SRC = Path(__file__).resolve().parent
 EVAL_SET_PATH = SRC / "data" / "email_examples.csv"
 
 # A build output, not source, so it lands at the repo root rather than in src/.
