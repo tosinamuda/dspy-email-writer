@@ -1,8 +1,11 @@
 """Compile the email writer from an eval set using GEPA."""
 
+import os
+
 import pandas as pd
 
 import dspy
+from lm import reflection_lm, task_lm
 from with_dspy import WriteEmail
 
 
@@ -35,7 +38,7 @@ def load_eval_set(path: str = "email_examples.csv") -> list[dspy.Example]:
 
 
 if __name__ == "__main__":
-    dspy.configure(lm=dspy.LM("openai/gpt-4o"))
+    dspy.configure(lm=task_lm())
 
     eval_set = load_eval_set()
     print(f"Loaded {len(eval_set)} examples")
@@ -45,11 +48,19 @@ if __name__ == "__main__":
     baseline = dspy.Evaluate(devset=eval_set, metric=email_quality, num_threads=4)(email)
     print(f"Baseline: {baseline.score:.1f}")
 
+    # auto="light" is the search budget to use for real. Set GEPA_MAX_METRIC_CALLS
+    # for a short, cheap run while you are still wiring things up.
+    budget = (
+        {"max_metric_calls": int(os.environ["GEPA_MAX_METRIC_CALLS"])}
+        if "GEPA_MAX_METRIC_CALLS" in os.environ
+        else {"auto": "light"}
+    )
+
     optimizer = dspy.GEPA(
         metric=email_quality,
-        auto="light",  # search budget: light, medium, or heavy
-        reflection_lm=dspy.LM("openai/gpt-5", temperature=1.0, max_tokens=32000),
+        reflection_lm=reflection_lm(),
         num_threads=4,
+        **budget,
     )
     compiled_email = optimizer.compile(email, trainset=eval_set)
 

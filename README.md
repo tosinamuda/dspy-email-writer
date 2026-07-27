@@ -15,6 +15,7 @@ uv sync
 - `without_dspy.py` — f-string prompt with JSON parsing, retry loop, and manual validation
 - `with_dspy.py` — DSPy Signature and ChainOfThought module
 - `optimize.py` — score a baseline, compile the email writer from the eval set with GEPA, then save the tuned program
+- `lm.py` — which model the scripts talk to (defaults to OpenAI; override with env vars)
 - `email_examples.csv` — sample eval set (12 rows, one per test case)
 
 ## Run
@@ -42,3 +43,22 @@ cp -r skills/prompt-to-dspy /path/to/your-project/.claude/skills/
 ```
 
 Then, from that project, ask Claude to convert your prompts to DSPy. It proposes a before/after per call site for you to review; it does not rewrite anything on its own.
+
+## Running against another provider
+
+The scripts default to OpenAI. To use anything else, including a local model, set the model and base URL instead of editing the code:
+
+```bash
+# DSPy scripts, against a local ollama model
+DSPY_MODEL=ollama_chat/qwen2.5:7b-instruct \
+DSPY_API_BASE=http://localhost:11434 \
+DSPY_REFLECTION_MODEL=ollama_chat/qwen2.5:7b-instruct \
+GEPA_MAX_METRIC_CALLS=25 \
+uv run python optimize.py
+
+# the without-DSPy script talks to the OpenAI SDK directly
+OPENAI_BASE_URL=http://localhost:11434/v1 OPENAI_API_KEY=ollama OPENAI_MODEL=qwen2.5:7b-instruct \
+uv run python without_dspy.py
+```
+
+`GEPA_MAX_METRIC_CALLS` caps the optimizer's search for a quick run. Leave it unset to use the `auto="light"` budget.

@@ -2,6 +2,8 @@
 
 import dspy
 
+from lm import task_lm
+
 
 class WriteEmail(dspy.Signature):
     """Write a professional email for the given sender, recipient, topic, and tone."""
@@ -15,7 +17,7 @@ class WriteEmail(dspy.Signature):
     body: str = dspy.OutputField(desc="Full email body")
 
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o"))
+dspy.configure(lm=task_lm())
 
 email = dspy.ChainOfThought(WriteEmail)
 
