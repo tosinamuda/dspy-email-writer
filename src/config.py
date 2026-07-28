@@ -1,47 +1,48 @@
-"""The choices the examples share. Edit them here, not in the environment.
+"""Defaults for the examples. A .env file overrides them.
 
-DSPy talks to every provider through LiteLLM, so the model string *is* the
-routing: the prefix picks the backend and LiteLLM finds the key.
+DSPy uses LiteLLM. The model string selects the backend:
 
-    openai/gpt-5                 OpenAI, key from OPENAI_API_KEY
-    anthropic/claude-sonnet-5    Anthropic, key from ANTHROPIC_API_KEY
-    ollama_chat/qwen3:4b         a local ollama server, no key
+    openai/gpt-5                 OpenAI. Key from OPENAI_API_KEY.
+    anthropic/claude-sonnet-5    Anthropic. Key from ANTHROPIC_API_KEY.
+    ollama_chat/qwen3:4b         A local ollama server. No key.
 
-Two models, doing different jobs. The task model writes the emails, once per
-example. The reflection model rewrites the instruction, once per proposal, so
-GEPA gets more out of a stronger model there than it costs you. Point the task
-model at something small and cheap and spend on reflection instead.
+Two models do two jobs. The task model writes each email. The reflection model
+rewrites the instruction once per GEPA proposal, not once per example. Make the
+reflection model the stronger of the two.
 """
 
+import os
 from pathlib import Path
 
-# Local, through ollama: a 4B writes, a 20B reasoner critiques.
-TASK_MODEL = "ollama_chat/qwen3:4b"
-REFLECTION_MODEL = "ollama_chat/gpt-oss:20b"
-API_BASE: str | None = "http://localhost:11434"
-
-# Hosted, if you would rather spend money than disk:
-# TASK_MODEL = "openai/gpt-5-mini"
-# REFLECTION_MODEL = "openai/gpt-5"
-# API_BASE = None
-
-# Example 01 runs before DSPy exists, so it names the model the OpenAI SDK way,
-# without the LiteLLM prefix that picks the backend.
-OPENAI_MODEL = TASK_MODEL.split("/", 1)[-1]
+from dotenv import load_dotenv
 
 SRC = Path(__file__).resolve().parent
+
+# Real environment variables win. A .env file fills in the rest.
+load_dotenv(SRC.parent / ".env")
+
+TASK_MODEL = os.getenv("TASK_MODEL", "ollama_chat/qwen3:4b")
+REFLECTION_MODEL = os.getenv("REFLECTION_MODEL", "ollama_chat/gpt-oss:20b")
+API_BASE = os.getenv("API_BASE", "http://localhost:11434") or None
+
+# Example 01 runs before DSPy exists. It names the model the OpenAI SDK way,
+# without the LiteLLM prefix that selects the backend.
+OPENAI_MODEL = TASK_MODEL.split("/", 1)[-1]
+
 EVAL_SET_PATH = SRC / "data" / "email_examples.csv"
 
-# A build output, not source, so it lands at the repo root rather than in src/.
+# A build output, not source. It goes to the repo root.
 COMPILED_PATH = SRC.parent / "optimized_email_writer.json"
 
-# GEPA's search budget. auto="light" is the one to use for real; set
-# MAX_METRIC_CALLS to an int for a short, cheap run while wiring things up.
-GEPA_AUTO = "light"
-MAX_METRIC_CALLS: int | None = None
+# GEPA's search budget. Use GEPA_AUTO for a real run. Set MAX_METRIC_CALLS
+# above the eval set size for a short one, or GEPA proposes nothing.
+GEPA_AUTO = os.getenv("GEPA_AUTO", "light")
+MAX_METRIC_CALLS = int(os.getenv("MAX_METRIC_CALLS", "0")) or None
 
-NUM_THREADS = 4
+NUM_THREADS = int(os.getenv("NUM_THREADS", "4"))
 
-# The reflection model rewrites instructions, so it gets room to think.
+# The reflection model rewrites instructions. Give it room to think.
 REFLECTION_TEMPERATURE = 1.0
 REFLECTION_MAX_TOKENS = 32000
+
+# Metric thresholds live in metric.py, beside the checks that use them.

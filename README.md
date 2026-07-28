@@ -2,154 +2,106 @@
 
 Companion code for [Stop Hand-Writing and Brute-Forcing Prompts: Use DSPy Instead](https://www.tosinamuda.com/blog/stop-hand-writing-prompts-dspy.html).
 
-One task, generating a professional email, written twice: once as an f-string with the plumbing it needs, once as a DSPy Signature. Then given a metric, scored, optimized, and loaded back.
+One task, written twice:
 
-Follow the steps below in order and you will end up with a prompt you did not write and a number that says it is better than the one you started with.
+- **`01_without_dspy.py`** builds a prompt by hand. It needs a JSON parser, a retry loop, and a fence stripper.
+- **`02_with_dspy.py`** declares a Signature. It has no prompt.
 
-## Prerequisites
+The other examples add a metric, a baseline, an optimizer, and a compiled prompt.
 
-**1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/).**
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-**2. Pick a model.** Either a local one (free, no key) or OpenAI.
-
-For local, install [ollama](https://ollama.com/download), then pull two models:
-
-```bash
-ollama pull qwen3:4b       # 2.5 GB, writes the emails
-ollama pull gpt-oss:20b    # 13 GB, rewrites the instruction
-```
-
-Check they are there and the server is up:
-
-```bash
-ollama list
-curl -s localhost:11434/api/tags | head -c 80
-```
-
-Two models, because they do different jobs. The **task model** writes an email once per example, so a 4B is fine, and being small enough to be wrong in interesting ways is what makes the optimizer's improvement visible. The **reflection model** only runs once per proposal GEPA tries, not once per example, so a slow 20B reasoner costs little and reads the failures far better.
-
-If 13 GB is too much, point `REFLECTION_MODEL` at any larger model you already have. It only needs to be stronger than the task model.
-
-For OpenAI instead:
-
-```bash
-export OPENAI_API_KEY=sk-...
-```
-
-**3. Install the dependencies.**
+## Install
 
 ```bash
 git clone https://github.com/tosinamuda/dspy-email-writer
 cd dspy-email-writer
 uv sync
+cp .env.example .env
 ```
 
-**4. Point it at your models.** `src/config.py` defaults to the local pair. To use OpenAI instead, swap in the commented block underneath:
+You need [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
-```python
-TASK_MODEL = "ollama_chat/qwen3:4b"
-REFLECTION_MODEL = "ollama_chat/gpt-oss:20b"
-API_BASE = "http://localhost:11434"
-```
+## Models
 
-That is the only edit you need. DSPy routes through LiteLLM, so the model string picks the backend, and example 01 derives its own model name by dropping the prefix.
+Two models do two jobs:
 
-## Step 1: See what you are replacing
+| Job | Default | Runs |
+| --- | --- | --- |
+| Task | `qwen3:4b` | once per example |
+| Reflection | `gpt-oss:20b` | once per GEPA proposal |
+
+Make the reflection model the stronger one. It runs far less often.
+
+For local models, install [ollama](https://ollama.com/download) and pull both:
 
 ```bash
-uv run python src/01_without_dspy.py
+ollama pull qwen3:4b       # 2.5 GB
+ollama pull gpt-oss:20b    # 13 GB
 ```
 
-An f-string with formatting rules, a JSON parser, a retry loop, markdown fence stripping, and a manual key check. It works. Note how much of the file is not the task.
+For OpenAI, edit `.env`. The file shows which lines to change.
 
-## Step 2: Declare the task instead
+`.env` overrides `src/config.py`. A real environment variable overrides both.
+
+## Run
+
+Run the examples in order:
 
 ```bash
-uv run python src/02_with_dspy.py
+uv run python src/01_without_dspy.py     # the prompt you replace
+uv run python src/02_with_dspy.py        # the same task as a Signature
+uv run python src/03_make_eval_set.py    # invent eval inputs
+uv run python src/04_baseline.py         # score before you tune
+uv run python src/05_optimize.py         # compile with GEPA
+uv run python src/06_use_compiled.py     # load the tuned program
 ```
 
-Same output, and the prompt is gone. `src/signature.py` is the whole contract: two inputs, two outputs, one sentence of intent. The script ends with `dspy.inspect_history(n=1)`, so you can read the prompt DSPy generated from it.
+What to look for:
 
-Read `01` and `02` side by side. That comparison is the point of the repo.
+- Read `01` and `02` together. That comparison is the point.
+- Both leave `[Your Name]` in the email. Step 4 deducts marks for it.
+- `02` ends with `dspy.inspect_history(n=1)`. It prints the generated prompt.
+- The eval set holds inputs only. The metric judges the output, so gold answers are not needed.
+- Step 4 scores **64.6** on `qwen3:4b`. Write your number down. It is the only proof that step 5 helped.
+- Step 5 needs tens of minutes on local models. Start it and do something else.
+- Step 6 prints the instruction length before and after the load. A one-line docstring becomes a few thousand characters.
 
-Both will probably hand you an email full of `[Your Name]` and `[Company Name]`. That is the failure the next steps measure and fix.
+For a short step 5, set `MAX_METRIC_CALLS=40` in `.env`. Keep the value above the eval set size, or GEPA proposes nothing.
 
-## Step 3: Get something to measure against
-
-```bash
-uv run python src/03_make_eval_set.py
-```
-
-Writes twelve rows to `src/data/email_examples.csv`. The repo ships a set already, so this overwrites it; run it to see where an eval set comes from when you do not have one.
-
-The rows are **inputs only**. There are no gold answers anywhere in this repo. `src/metric.py` judges what the model returns against rules, which is why you do not have to write twelve perfect emails first.
-
-## Step 4: Score it before you change anything
-
-```bash
-uv run python src/04_baseline.py
-```
-
-On `qwen3:4b` this scores **64.6**, most of it deducted by the placeholder check. Your number will differ with your task model; what matters is writing it down, because it is the only thing that can tell you whether step 5 helped.
-
-Do not skip this. Without a number from before, a compiled program is just a different prompt rather than a better one.
-
-## Step 5: Let the optimizer write the prompt
-
-```bash
-uv run python src/05_optimize.py
-```
-
-GEPA runs the program over the eval set, reads what the metric said about each failure, and has the reflection model rewrite the instruction. It prints the baseline and the compiled score, then saves to `optimized_email_writer.json`.
-
-**This takes a long time against local models** — tens of minutes, since every proposal is re-scored over the whole eval set. Start it and go and do something else. For a quick wiring check instead, set `MAX_METRIC_CALLS` in `src/config.py`. Give it more than the eval set holds, or the whole budget goes on scoring the baseline and GEPA never proposes anything: with twelve rows, twelve calls buys you zero proposals and the reflection model is never even loaded. Try 40.
-
-## Step 6: Ship the compiled program
-
-```bash
-uv run python src/06_use_compiled.py
-```
-
-Loads the saved program and calls it. It prints the instruction length before and after loading, which is the clearest way to see that the tuning is real: a one-line docstring becomes a few thousand characters of instruction that GEPA wrote, not you.
-
-The module you started with has none of that in it, which is why production loads the artifact rather than calling the module directly.
-
-## Layout
+## Files
 
 ```
 src/
   01_without_dspy.py     f-string, JSON parsing, retry loop
   02_with_dspy.py        the same task as a Signature
-  03_make_eval_set.py    invent eval inputs when you have none
+  03_make_eval_set.py    invent eval inputs
   04_baseline.py         score before tuning
   05_optimize.py         compile with GEPA
-  06_use_compiled.py     load the tuned program and call it
-  config.py              models, budgets, thresholds, paths
+  06_use_compiled.py     load the tuned program
+  config.py              models, budget, paths
   lm.py                  builds the two dspy.LM objects
-  signature.py           WriteEmail: the task contract
-  metric.py              what "a good email" means, in code
-  eval_set.py            load the eval set, or invent one
-  data/                  the eval set: inputs only
-skills/prompt-to-dspy/   a Claude agent skill for migrating your own prompts
+  signature.py           the task contract
+  metric.py              what a good email is, in code
+  eval_set.py            load or invent the eval set
+  data/                  the eval set
+skills/prompt-to-dspy/   migrate your own prompts
 ```
 
-Flat on purpose. The scripts run from `src/`, so `src/` is on the import path and `from signature import WriteEmail` works with no install step, no package name, and no `PYTHONPATH`.
+The layout is flat. The scripts run from `src/`, so `from signature import WriteEmail` needs no install step and no `PYTHONPATH`.
 
-Models, search budget, and metric thresholds live in `config.py` rather than the environment: they are decisions about the program, not facts about your machine, so a diff should show them changing. Your API key stays in the environment, where LiteLLM finds it on its own.
+## Migrate your own prompts
 
-## Prompt to DSPy skill
+`skills/prompt-to-dspy/` is a Claude agent skill. It does to your code what steps 1 to 6 do here:
 
-`skills/prompt-to-dspy/` does to your code what steps 1 through 6 do here: finds the f-string prompts, measures a baseline first (inventing eval inputs if your project has none), extracts each contract, proposes a Signature and a module, and scores the result against the number it started with.
+1. Find the f-string prompts.
+2. Score the code as it stands. It invents eval inputs if your project has none.
+3. Propose a Signature and a module for each call.
+4. Score the result against the first number.
 
-It is a migration tool, so install it into the project you are converting rather than globally:
+Install it into the project you convert, not globally:
 
 ```bash
 mkdir -p /path/to/your-project/.claude/skills
 cp -r skills/prompt-to-dspy /path/to/your-project/.claude/skills/
 ```
 
-Then ask Claude to convert your prompts. It proposes a before and after per call site; it does not rewrite anything on its own.
+Then ask Claude to convert your prompts. It proposes a before and after for each call site. It changes nothing on its own.

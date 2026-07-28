@@ -418,6 +418,7 @@ dependencies = [
     { name = "dspy" },
     { name = "openai" },
     { name = "pydantic" },
+    { name = "python-dotenv" },
 ]
 
 [package.metadata]
@@ -425,6 +426,7 @@ requires-dist = [
     { name = "dspy", specifier = ">=3.2" },
     { name = "openai", specifier = ">=1.0" },
     { name = "pydantic", specifier = ">=2.0" },
+    { name = "python-dotenv", specifier = ">=1.0" },
 ]
 
 [[package]]

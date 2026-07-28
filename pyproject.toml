@@ -7,6 +7,7 @@ dependencies = [
     "dspy>=3.2",      # RLM landed in 3.1, GEPA in 3.0
     "openai>=1.0",    # example 01 only, before DSPy exists
     "pydantic>=2.0",
+    "python-dotenv>=1.0",
 ]
 
 # Scripts, not a library: nothing here gets built or installed.
