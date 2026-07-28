@@ -61,9 +61,10 @@ What to look for:
 - Both leave `[Your Name]` in the email. Step 4 deducts marks for it.
 - `02` ends with `dspy.inspect_history(n=1)`. It prints the generated prompt.
 - The eval set holds inputs only. The metric judges the output, so gold answers are not needed.
-- Step 4 scores **64.6** on `qwen3:4b`. Write your number down. It is the only proof that step 5 helped.
-- Step 5 needs tens of minutes on local models. Start it and do something else.
-- Step 6 prints the instruction length before and after the load. A one-line docstring becomes a few thousand characters.
+- Step 4 scores about **65** on `qwen3:4b`. The exact figure moves a point or two between runs, because the metric scores sampled output. Write your number down. It is the only proof that step 5 helped.
+- Step 5 needs tens of minutes on local models. One run here went from **66.7 to 93.8** in about 40 minutes, with `MAX_METRIC_CALLS=40`.
+- Step 5 prints `Saved to ...` and then may not exit on its own. The work is done at that point, and Ctrl-C is safe. A leaked semaphore from the parallel evaluation holds the process open at shutdown.
+- Step 6 prints the instruction length before and after the load: 68 characters becomes 3745. GEPA wrote the difference.
 
 For a short step 5, set `MAX_METRIC_CALLS=40` in `.env`. Keep the value above the eval set size, or GEPA proposes nothing.
 
