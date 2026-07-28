@@ -1,6 +1,6 @@
 # dspy-email-writer
 
-Companion code for [Stop Hand-Writing and Brute-Forcing Prompts: Use DSPy Instead](https://www.tosinamuda.com/blog/stop-hand-writing-prompts-dspy.html).
+Companion code for [Stop Hand-Writing and Brute-Forcing Prompts: Use DSPy Instead](https://tosinamuda.com/blog/stop-hand-writing-prompts-dspy.html).
 
 One task, written twice:
 
