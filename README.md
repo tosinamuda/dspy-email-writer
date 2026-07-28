@@ -94,7 +94,7 @@ The rows are **inputs only**. There are no gold answers anywhere in this repo. `
 uv run python src/04_baseline.py
 ```
 
-Expect a score well short of 100, most of it deducted by the placeholder check. The exact number depends on your task model; what matters is writing it down, because it is the only thing that can tell you whether step 5 helped.
+On `qwen3:4b` this scores **64.6**, most of it deducted by the placeholder check. Your number will differ with your task model; what matters is writing it down, because it is the only thing that can tell you whether step 5 helped.
 
 Do not skip this. Without a number from before, a compiled program is just a different prompt rather than a better one.
 
@@ -106,7 +106,7 @@ uv run python src/05_optimize.py
 
 GEPA runs the program over the eval set, reads what the metric said about each failure, and has the reflection model rewrite the instruction. It prints the baseline and the compiled score, then saves to `optimized_email_writer.json`.
 
-**This takes a long time against local models** — tens of minutes, since every proposal is re-scored over the whole eval set. Start it and go and do something else. For a quick wiring check instead, set `MAX_METRIC_CALLS = 12` in `src/config.py`: enough to prove both models are reachable, not enough to improve anything.
+**This takes a long time against local models** — tens of minutes, since every proposal is re-scored over the whole eval set. Start it and go and do something else. For a quick wiring check instead, set `MAX_METRIC_CALLS` in `src/config.py`. Give it more than the eval set holds, or the whole budget goes on scoring the baseline and GEPA never proposes anything: with twelve rows, twelve calls buys you zero proposals and the reflection model is never even loaded. Try 40.
 
 ## Step 6: Ship the compiled program
 
