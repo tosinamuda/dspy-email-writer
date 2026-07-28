@@ -16,20 +16,23 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 **2. Pick a model.** Either a local one (free, no key) or OpenAI.
 
-For local, install [ollama](https://ollama.com/download), then pull the model these examples were written against:
+For local, install [ollama](https://ollama.com/download), then pull two models:
 
 ```bash
-ollama pull qwen2.5:7b-instruct
+ollama pull qwen3:4b       # 2.5 GB, writes the emails
+ollama pull gpt-oss:20b    # 13 GB, rewrites the instruction
 ```
 
-Check it is there and the server is up:
+Check they are there and the server is up:
 
 ```bash
 ollama list
 curl -s localhost:11434/api/tags | head -c 80
 ```
 
-A 7B model is small enough to be wrong in interesting ways. That is the point: it is what makes the optimizer's improvement visible.
+Two models, because they do different jobs. The **task model** writes an email once per example, so a 4B is fine, and being small enough to be wrong in interesting ways is what makes the optimizer's improvement visible. The **reflection model** only runs once per proposal GEPA tries, not once per example, so a slow 20B reasoner costs little and reads the failures far better.
+
+If 13 GB is too much, point `REFLECTION_MODEL` at any larger model you already have. It only needs to be stronger than the task model.
 
 For OpenAI instead:
 
@@ -45,16 +48,15 @@ cd dspy-email-writer
 uv sync
 ```
 
-**4. Point it at your model.** `src/config.py` defaults to OpenAI. For ollama, replace the four values at the top with the commented block underneath them:
+**4. Point it at your models.** `src/config.py` defaults to the local pair. To use OpenAI instead, swap in the commented block underneath:
 
 ```python
-TASK_MODEL = "ollama_chat/qwen2.5:7b-instruct"
-REFLECTION_MODEL = "ollama_chat/qwen2.5:7b-instruct"
+TASK_MODEL = "ollama_chat/qwen3:4b"
+REFLECTION_MODEL = "ollama_chat/gpt-oss:20b"
 API_BASE = "http://localhost:11434"
-OPENAI_MODEL = "qwen2.5:7b-instruct"
 ```
 
-That is the only edit you need. DSPy routes through LiteLLM, so the model string picks the backend.
+That is the only edit you need. DSPy routes through LiteLLM, so the model string picks the backend, and example 01 derives its own model name by dropping the prefix.
 
 ## Step 1: See what you are replacing
 
@@ -92,7 +94,7 @@ The rows are **inputs only**. There are no gold answers anywhere in this repo. `
 uv run python src/04_baseline.py
 ```
 
-Expect around **66.7** on `qwen2.5:7b-instruct`. Most of what it is deducting is the placeholder check.
+Expect a score well short of 100, most of it deducted by the placeholder check. The exact number depends on your task model; what matters is writing it down, because it is the only thing that can tell you whether step 5 helped.
 
 Do not skip this. Without a number from before, a compiled program is just a different prompt rather than a better one.
 
@@ -104,7 +106,7 @@ uv run python src/05_optimize.py
 
 GEPA runs the program over the eval set, reads what the metric said about each failure, and has the reflection model rewrite the instruction. It prints the baseline and the compiled score, then saves to `optimized_email_writer.json`.
 
-**This takes several minutes against a local model.** Start it and go and do something else. For a quick smoke run instead, set `MAX_METRIC_CALLS = 15` in `src/config.py` — enough to prove the wiring, not enough to improve anything.
+**This takes a long time against local models** — tens of minutes, since every proposal is re-scored over the whole eval set. Start it and go and do something else. For a quick wiring check instead, set `MAX_METRIC_CALLS = 12` in `src/config.py`: enough to prove both models are reachable, not enough to improve anything.
 
 ## Step 6: Ship the compiled program
 

@@ -1,30 +1,33 @@
 """The choices the examples share. Edit them here, not in the environment.
 
 DSPy talks to every provider through LiteLLM, so the model string *is* the
-routing: the prefix picks the backend and LiteLLM finds the key. Nothing here
-needs its own idea of a provider.
+routing: the prefix picks the backend and LiteLLM finds the key.
 
-    openai/gpt-5                     OpenAI, key from OPENAI_API_KEY
-    anthropic/claude-sonnet-5        Anthropic, key from ANTHROPIC_API_KEY
-    ollama_chat/qwen2.5:7b-instruct  a local ollama server, no key
+    openai/gpt-5                 OpenAI, key from OPENAI_API_KEY
+    anthropic/claude-sonnet-5    Anthropic, key from ANTHROPIC_API_KEY
+    ollama_chat/qwen3:4b         a local ollama server, no key
 
-To run everything locally, swap the four values below for the commented ones.
+Two models, doing different jobs. The task model writes the emails, once per
+example. The reflection model rewrites the instruction, once per proposal, so
+GEPA gets more out of a stronger model there than it costs you. Point the task
+model at something small and cheap and spend on reflection instead.
 """
 
 from pathlib import Path
 
-TASK_MODEL = "openai/gpt-5"
-REFLECTION_MODEL = "openai/gpt-5"
-API_BASE: str | None = None
+# Local, through ollama: a 4B writes, a 20B reasoner critiques.
+TASK_MODEL = "ollama_chat/qwen3:4b"
+REFLECTION_MODEL = "ollama_chat/gpt-oss:20b"
+API_BASE: str | None = "http://localhost:11434"
 
-# Example 01 runs before DSPy exists, so it names its model the OpenAI SDK way.
-OPENAI_MODEL = "gpt-5"
+# Hosted, if you would rather spend money than disk:
+# TASK_MODEL = "openai/gpt-5-mini"
+# REFLECTION_MODEL = "openai/gpt-5"
+# API_BASE = None
 
-# Local, through ollama:
-# TASK_MODEL = "ollama_chat/qwen2.5:7b-instruct"
-# REFLECTION_MODEL = "ollama_chat/qwen2.5:7b-instruct"
-# API_BASE = "http://localhost:11434"
-# OPENAI_MODEL = "qwen2.5:7b-instruct"
+# Example 01 runs before DSPy exists, so it names the model the OpenAI SDK way,
+# without the LiteLLM prefix that picks the backend.
+OPENAI_MODEL = TASK_MODEL.split("/", 1)[-1]
 
 SRC = Path(__file__).resolve().parent
 EVAL_SET_PATH = SRC / "data" / "email_examples.csv"
