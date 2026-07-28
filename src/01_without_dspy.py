@@ -7,12 +7,10 @@ import json
 
 from openai import OpenAI
 
-from config import OPENAI_MODEL
+from config import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL
 
-# The SDK reads OPENAI_API_KEY, and OPENAI_BASE_URL if you point it at a local
-# server. This is the only example that needs either: from 02 on, DSPy hands the
-# routing to LiteLLM.
-client = OpenAI()
+# The only example that wires up a client by hand. From 02 on, DSPy does it.
+client = OpenAI(base_url=OPENAI_BASE_URL, api_key=OPENAI_API_KEY)
 
 
 def generate_email(topic: str, tone: str) -> dict:

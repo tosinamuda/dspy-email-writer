@@ -25,9 +25,12 @@ TASK_MODEL = os.getenv("TASK_MODEL", "ollama_chat/qwen3:4b")
 REFLECTION_MODEL = os.getenv("REFLECTION_MODEL", "ollama_chat/gpt-oss:20b")
 API_BASE = os.getenv("API_BASE", "http://localhost:11434") or None
 
-# Example 01 runs before DSPy exists. It names the model the OpenAI SDK way,
-# without the LiteLLM prefix that selects the backend.
+# Example 01 runs before DSPy exists, so it talks to the OpenAI SDK directly.
+# The SDK wants the model without the LiteLLM prefix, the /v1 suffix on the
+# base URL, and a key even when the server ignores one.
 OPENAI_MODEL = TASK_MODEL.split("/", 1)[-1]
+OPENAI_BASE_URL = f"{API_BASE}/v1" if API_BASE else None
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") or ("local" if API_BASE else None)
 
 EVAL_SET_PATH = SRC / "data" / "email_examples.csv"
 
