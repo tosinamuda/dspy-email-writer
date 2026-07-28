@@ -38,7 +38,7 @@ ollama pull qwen3:4b       # 2.5 GB
 ollama pull gpt-oss:20b    # 13 GB
 ```
 
-For OpenAI, edit `.env`. The file shows which lines to change.
+For OpenAI, edit `.env`. The file shows which lines to edit.
 
 `.env` overrides `src/config.py`. A real environment variable overrides both.
 
@@ -104,4 +104,4 @@ mkdir -p /path/to/your-project/.claude/skills
 cp -r skills/prompt-to-dspy /path/to/your-project/.claude/skills/
 ```
 
-Then ask Claude to convert your prompts. It proposes a before and after for each call site. It changes nothing on its own.
+Then ask Claude to convert your prompts. It proposes a before and after for each call site. It rewrites nothing on its own.
